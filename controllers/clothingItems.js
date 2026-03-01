@@ -1,4 +1,5 @@
 const ClothingItem = require("../models/clothingItem");
+const { BAD_REQUEST, NOT_FOUND, SERVER_ERROR } = require("../utils/errors");
 
 module.exports.getItems = (req, res) => {
   ClothingItem.find({})
@@ -6,7 +7,7 @@ module.exports.getItems = (req, res) => {
     .catch((err) => {
       console.error(err);
       return res
-        .status(500)
+        .status(SERVER_ERROR)
         .send({ message: "An error has occurred on the server" });
     });
 };
@@ -17,10 +18,10 @@ module.exports.createItem = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "ValidationError") {
-        return res.status(400).send({ message: "Invalid item data" });
+        return res.status(BAD_REQUEST).send({ message: "Invalid item data" });
       }
       return res
-        .status(500)
+        .status(SERVER_ERROR)
         .send({ message: "An error has occurred on the server" });
     });
 };
@@ -31,13 +32,55 @@ module.exports.deleteItem = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "CastError") {
-        return res.status(400).send({ message: "Invalid item ID" });
+        return res.status(BAD_REQUEST).send({ message: "Invalid item ID" });
       }
       if (err.name === "DocumentNotFoundError") {
-        return res.status(404).send({ message: "Item not found" });
+        return res.status(NOT_FOUND).send({ message: "Item not found" });
       }
       return res
-        .status(500)
+        .status(SERVER_ERROR)
+        .send({ message: "An error has occurred on the server" });
+    });
+};
+module.exports.likeItem = (req, res) => {
+  ClothingItem.findByIdAndUpdate(
+    req.params.itemId,
+    { $addToSet: { likes: req.user._id } },
+    { new: true }
+  )
+    .orFail()
+    .then((updatedItem) => res.status(200).send(updatedItem))
+    .catch((err) => {
+      console.error(err);
+      if (err.name === "CastError") {
+        return res.status(BAD_REQUEST).send({ message: "Invalid item ID" });
+      }
+      if (err.name === "DocumentNotFoundError") {
+        return res.status(NOT_FOUND).send({ message: "Item not found" });
+      }
+      return res
+        .status(SERVER_ERROR)
+        .send({ message: "An error has occurred on the server" });
+    });
+};
+module.exports.dislikeItem = (req, res) => {
+  ClothingItem.findByIdAndUpdate(
+    req.params.itemId,
+    { $pull: { likes: req.user._id } },
+    { new: true }
+  )
+    .orFail()
+    .then((updatedItem) => res.status(200).send(updatedItem))
+    .catch((err) => {
+      console.error(err);
+      if (err.name === "CastError") {
+        return res.status(BAD_REQUEST).send({ message: "Invalid item ID" });
+      }
+      if (err.name === "DocumentNotFoundError") {
+        return res.status(NOT_FOUND).send({ message: "Item not found" });
+      }
+      return res
+        .status(SERVER_ERROR)
         .send({ message: "An error has occurred on the server" });
     });
 };
