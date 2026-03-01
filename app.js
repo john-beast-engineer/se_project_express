@@ -11,6 +11,9 @@ const { PORT = 3001 } = process.env;
 
 const app = express();
 
+app.use(express.json());
+app.use("/", require("./routes"));
+
 app.listen(PORT, () => {
   console.log(`server is listening on port ${PORT}`);
 });
