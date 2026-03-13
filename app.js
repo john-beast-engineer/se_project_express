@@ -24,6 +24,4 @@ app.get("/items", getItems);
 app.use(auth);
 app.use("/", require("./routes"));
 
-app.listen(PORT, () => {
-  console.log(`server is listening on port ${PORT}`);
-});
+app.listen(PORT, () => {});
