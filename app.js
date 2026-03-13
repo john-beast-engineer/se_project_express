@@ -1,15 +1,16 @@
+const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors");
 const { createUser, login } = require("./controllers/users");
 const { getItems } = require("./controllers/clothingItems");
 const auth = require("./middlewares/auth");
-const cors = require("cors");
 
 mongoose
   .connect("mongodb://127.0.0.1/wtwr_db")
-  .then(() => console.log("connected to DB"))
-  .catch((err) => console.log("DB error", err));
-
-const express = require("express");
+  .then(() => {})
+  .catch((err) => {
+    throw err;
+  });
 
 const { PORT = 3001 } = process.env;
 
