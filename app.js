@@ -1,4 +1,8 @@
 const mongoose = require("mongoose");
+const { createUser, login } = require("./controllers/users");
+const { getItems } = require("./controllers/clothingItems");
+const auth = require("./middlewares/auth");
+const cors = require("cors");
 
 mongoose
   .connect("mongodb://127.0.0.1/wtwr_db")
@@ -11,13 +15,12 @@ const { PORT = 3001 } = process.env;
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
-app.use((req, res, next) => {
-  req.user = {
-    _id: "69a3fcee8a1863ff27fb4fd1",
-  };
-  next();
-});
+app.post("/signup", createUser);
+app.post("/signin", login);
+app.get("/items", getItems);
+app.use(auth);
 app.use("/", require("./routes"));
 
 app.listen(PORT, () => {
