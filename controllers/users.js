@@ -7,6 +7,7 @@ const {
   NOT_FOUND,
   SERVER_ERROR,
   CONFLICT,
+  UNAUTHORIZED,
 } = require("../utils/errors");
 
 module.exports.getCurrentUser = (req, res) => {
@@ -67,7 +68,12 @@ module.exports.login = (req, res) => {
       res.send({ token });
     })
     .catch((err) => {
-      res.status(401).send({ message: err.message });
+      if (err.message === "Incorrect email or password") {
+        return res.status(UNAUTHORIZED).send({ message: err.message });
+      }
+      return res
+        .status(SERVER_ERROR)
+        .send({ message: "An error has occurred on the server" });
     });
 };
 module.exports.updateUser = (req, res) => {
@@ -76,6 +82,7 @@ module.exports.updateUser = (req, res) => {
     { name: req.body.name, avatar: req.body.avatar },
     { new: true, runValidators: true }
   )
+    .orFail()
     .then((user) => res.status(200).send(user))
     .catch((err) => {
       console.error(err);
@@ -84,6 +91,9 @@ module.exports.updateUser = (req, res) => {
       }
       if (err.name === "ValidationError") {
         return res.status(BAD_REQUEST).send({ message: "Invalid user data" });
+      }
+      if (err.name === "DocumentNotFoundError") {
+        return res.status(NOT_FOUND).send({ message: "User not found" });
       }
       return res
         .status(SERVER_ERROR)
