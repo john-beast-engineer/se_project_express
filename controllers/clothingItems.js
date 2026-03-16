@@ -35,15 +35,18 @@ module.exports.deleteItem = (req, res) => {
     .orFail()
     .then((item) => {
       if (item.owner.toString() !== req.user._id.toString()) {
-        return res
-          .status(FORBIDDEN)
-          .send({ message: "You are not authorized to delete this item" });
+        const error = new Error("You are not authorized to delete this item");
+        error.statusCode = FORBIDDEN;
+        return Promise.reject(error);
       }
       return ClothingItem.findByIdAndDelete(req.params.itemId);
     })
     .then((deletedItem) => res.status(200).send(deletedItem))
     .catch((err) => {
       console.error(err);
+      if (err.statusCode === FORBIDDEN) {
+        return res.status(FORBIDDEN).send({ message: err.message });
+      }
       if (err.name === "CastError") {
         return res.status(BAD_REQUEST).send({ message: "Invalid item ID" });
       }
