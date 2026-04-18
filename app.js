@@ -7,7 +7,9 @@ const auth = require("./middlewares/auth");
 
 mongoose
   .connect("mongodb://127.0.0.1/wtwr_db")
-  .then(() => {})
+  .then(() => {
+    console.log("Connected to MongoDB");
+  })
   .catch((err) => {
     throw err;
   });
@@ -24,4 +26,6 @@ app.get("/items", getItems);
 app.use(auth);
 app.use("/", require("./routes"));
 
-app.listen(PORT, () => {});
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
