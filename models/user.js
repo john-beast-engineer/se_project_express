@@ -11,12 +11,10 @@ const userSchema = new mongoose.Schema({
   },
   avatar: {
     type: String,
-    required: true,
+    default: "",
     validate: {
-      validator(value) {
-        return validator.isURL(value);
-      },
-      message: "You must enter a valid URL",
+      validator: (v) => v === "" || validator.isURL(v),
+      message: "Invalid URL",
     },
   },
   email: {
