@@ -1,14 +1,13 @@
 const router = require("express").Router();
 const userRouter = require("./users");
-const { NOT_FOUND } = require("../utils/errors");
 const itemRouter = require("./clothingItems");
+const NotFoundError = require("../errors/not-found-error");
 
 router.use("/items", itemRouter);
-
 router.use("/users", userRouter);
 
-router.use((req, res) => {
-  res.status(NOT_FOUND).send({ message: "Requested resource not found" });
+router.use((req, res, next) => {
+  next(new NotFoundError("Requested resource not found"));
 });
 
 module.exports = router;

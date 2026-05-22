@@ -2,32 +2,27 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const { JWT_SECRET } = require("../utils/config");
-const {
-  BAD_REQUEST,
-  NOT_FOUND,
-  SERVER_ERROR,
-  CONFLICT,
-  UNAUTHORIZED,
-} = require("../utils/errors");
 
-module.exports.getCurrentUser = (req, res) => {
+const BadRequestError = require("../errors/bad-request-error");
+const UnauthorizedError = require("../errors/unauthorized-error");
+const NotFoundError = require("../errors/not-found-error");
+const ConflictError = require("../errors/conflict-error");
+
+module.exports.getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
     .orFail()
     .then((user) => res.status(200).send(user))
     .catch((err) => {
-      console.error(err);
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid user ID" });
+        return next(new BadRequestError("Invalid user ID"));
       }
       if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: "User not found" });
+        return next(new NotFoundError("User not found"));
       }
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
+      return next(err);
     });
 };
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   const { name, avatar, email, password } = req.body;
   bcrypt
     .hash(password, 10)
@@ -39,25 +34,20 @@ module.exports.createUser = (req, res) => {
       })
     )
     .catch((err) => {
-      console.error(err);
       if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid user data" });
+        return next(new BadRequestError("Invalid user data"));
       }
       if (err.code === 11000) {
-        return res.status(CONFLICT).send({ message: "Email already exists" });
+        return next(new ConflictError("Email already exists"));
       }
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
+      return next(err);
     });
 };
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res
-      .status(BAD_REQUEST)
-      .send({ message: "Email and password are required" });
+    return next(new BadRequestError("Email and password are required"));
   }
 
   return User.findUserByCredentials(email, password)
@@ -69,14 +59,12 @@ module.exports.login = (req, res) => {
     })
     .catch((err) => {
       if (err.message === "Incorrect email or password") {
-        return res.status(UNAUTHORIZED).send({ message: err.message });
+        return next(new UnauthorizedError(err.message));
       }
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
+      return next(err);
     });
 };
-module.exports.updateUser = (req, res) => {
+module.exports.updateUser = (req, res, next) => {
   User.findByIdAndUpdate(
     req.user._id,
     { name: req.body.name, avatar: req.body.avatar },
@@ -85,18 +73,15 @@ module.exports.updateUser = (req, res) => {
     .orFail()
     .then((user) => res.status(200).send(user))
     .catch((err) => {
-      console.error(err);
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid user ID" });
+        return next(new BadRequestError("Invalid user ID"));
       }
       if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid user data" });
+        return next(new BadRequestError("Invalid user data"));
       }
       if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: "User not found" });
+        return next(new NotFoundError("User not found"));
       }
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
+      return next(err);
     });
 };
