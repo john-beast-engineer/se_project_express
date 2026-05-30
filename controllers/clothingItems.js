@@ -15,7 +15,6 @@ module.exports.createItem = (req, res, next) => {
   ClothingItem.create({ name, weather, imageUrl, owner: req.user._id })
     .then((newItem) => res.status(201).send(newItem))
     .catch((err) => {
-      console.error(err);
       if (err.name === "ValidationError") {
         return next(new BadRequestError("Invalid item data"));
       }

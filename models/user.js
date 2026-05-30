@@ -5,22 +5,24 @@ const validator = require("validator");
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
-    minlength: 2,
-    maxlength: 30,
+    required: [true, "Name is required"],
+    minlength: [2, "Name must be at least 2 characters"],
+    maxlength: [30, "Name cannot exceed 30 characters"],
   },
   avatar: {
     type: String,
-    default: "",
+    required: [true, "Avatar URL is required"],
     validate: {
-      validator: (v) => v === "" || validator.isURL(v),
+      validator: (v) => validator.isURL(v),
       message: "Invalid URL",
     },
   },
   email: {
     type: String,
+    required: [true, "Email is required"],
     unique: true,
-    required: true,
+    lowercase: true,
+    trim: true,
     validate: {
       validator(value) {
         return validator.isEmail(value);
@@ -30,10 +32,11 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: [true, "Password is required"],
     select: false,
   },
 });
+
 userSchema.statics.findUserByCredentials = function findUserByCredentials(
   email,
   password
@@ -52,4 +55,5 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(
       });
     });
 };
+
 module.exports = mongoose.model("user", userSchema);
